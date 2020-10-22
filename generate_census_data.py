@@ -6,7 +6,7 @@ from census import Census
 
 
 YOUR_API_KEY = 'a0990b4ff9c0ca56bcda54547e9a4d1fa11232cb'
-CENSUS_FILE_NAME = 'nyc_census'
+CENSUS_FILE_NAME = 'ca_census'
 variables = ['NAME', 'B01001_001E',  'B19013_001E', 'B25077_001E', 
              'B03002_003E', 'B03002_004E',  'B02001_004E', 'B03002_006E',  
              'B03002_007E', 'B03002_008E',  'B03002_009E', 'B03002_012E',
@@ -77,7 +77,7 @@ for year in years:
     print('Year: {}'.format(year))
 
     census_data = []
-    for county in nyc_met_area:
+    for county in ca_msa:
         print('      ' + county["county_name"])
         census_data +=  get_acs_data(c,
                                     variables,
