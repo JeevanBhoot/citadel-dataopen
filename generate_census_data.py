@@ -5,8 +5,8 @@ import pandas as pd
 from census import Census
 
 
-YOUR_API_KEY = ''
-CENSUS_FILE_NAME = 'mycensus'
+YOUR_API_KEY = 'a0990b4ff9c0ca56bcda54547e9a4d1fa11232cb'
+CENSUS_FILE_NAME = 'ca_msa_census'
 variables = ['NAME', 'B01001_001E',  'B19013_001E', 'B25077_001E', 
              'B03002_003E', 'B03002_004E',  'B02001_004E', 'B03002_006E',  
              'B03002_007E', 'B03002_008E',  'B03002_009E', 'B03002_012E']
@@ -45,6 +45,14 @@ nyc_met_area = [
     {"state_code":"42", "county_code": "103", "county_name": "Pike, PA"}  
 ]
 
+ca_msa = [
+    {"state_code":"06", "county_code": "075", "county_name": "San Francisco, CA"},
+    {"state_code":"06", "county_code": "001", "county_name": "Alameda, CA"},
+    {"state_code":"06", "county_code": "041", "county_name": "Marin, CA"},
+    {"state_code":"06", "county_code": "013", "county_name": "Contra Costa, CA"},
+    {"state_code":"06", "county_code": "081", "county_name": "San Mateo, CA"}
+]
+
 dfCounties = pd.DataFrame(nyc_met_area)
 
 
@@ -65,7 +73,7 @@ for year in years:
     print('Year: {}'.format(year))
 
     census_data = []
-    for county in nyc_met_area:
+    for county in ca_msa:
         print('      ' + county["county_name"])
         census_data +=  get_acs_data(c,
                                     variables,
