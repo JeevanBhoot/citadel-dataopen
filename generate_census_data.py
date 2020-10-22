@@ -6,13 +6,16 @@ from census import Census
 
 
 YOUR_API_KEY = 'a0990b4ff9c0ca56bcda54547e9a4d1fa11232cb'
-CENSUS_FILE_NAME = 'ca_msa_census'
+CENSUS_FILE_NAME = 'nyc_census'
 variables = ['NAME', 'B01001_001E',  'B19013_001E', 'B25077_001E', 
              'B03002_003E', 'B03002_004E',  'B02001_004E', 'B03002_006E',  
              'B03002_007E', 'B03002_008E',  'B03002_009E', 'B03002_012E',
-             'B06009_005E', 'B15001_017E', 'B15001_050E']
+             'B08528_010E', 'B08126_003E', 'B08126_006E', 'B08126_008E', #unpaid family workers, construction, retail trade, information
+             'B08126_009E', 'B08126_011E', 'B08126_012E', 'B08126_014E', #finance_insurance_realestate, education_health_scoial, arts_entertainment_recreation_accomodation, public administration
+             'B08126_015E', #armed forces
+             'B06009_005E', 'B15001_017E', 'B15001_050E'] #education: total bachelors degree, 18-24 male bachelors, 18-24 female bachelors
 
-years = [2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018] 
+years = [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018] 
 
 
 c = Census(YOUR_API_KEY)
@@ -74,7 +77,7 @@ for year in years:
     print('Year: {}'.format(year))
 
     census_data = []
-    for county in ca_msa:
+    for county in nyc_met_area:
         print('      ' + county["county_name"])
         census_data +=  get_acs_data(c,
                                     variables,
