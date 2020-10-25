@@ -1,0 +1,543 @@
+%-----------------------------------------------------------------------------------------
+% Final year project report/dissertation template
+%-----------------------------------------------------------------------------------------
+% R F L Evans (2019)
+% Licensed under the public domain (CC0) licence:
+%
+% The person who associated a work with this deed has dedicated the work to the public 
+% domain by waiving all of his or her rights to the work worldwide under copyright law, 
+% including all related and neighboring rights, to the extent allowed by law.
+%
+% You can copy, modify, distribute and perform the work, even for commercial purposes,
+%  all without asking permission.
+%----------------------------------------------------------------------------------------
+%
+
+%-----------------------------------------------------------------------------------------
+% Determines the type of document and font size
+%-----------------------------------------------------------------------------------------
+\documentclass[11pt,a4paper]{article}
+%-----------------------------------------------------------------------------------------
+% Font control
+%-----------------------------------------------------------------------------------------
+\usepackage{mathptmx} % Times Roman Font
+\usepackage{array}
+\usepackage{ulem} % For edits
+%-----------------------------------------------------------------------------------------
+\usepackage{helvet} % Arial/Helvetica font
+\renewcommand{\familydefault}{\sfdefault} % Makes serif text all Helvetica
+%-----------------------------------------------------------------------------------------
+% Set up the page margins
+%-----------------------------------------------------------------------------------------
+\usepackage[left=2.25cm, right=2.25cm, top=2.25cm]{geometry} % Sets the page margins
+%-----------------------------------------------------------------------------------------
+% Allow graphics
+%-----------------------------------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{amsmath}
+%-----------------------------------------------------------------------------------------https://www.overleaf.com/project/5def93fba4ab110001b839aa
+% Add your report title here
+%-----------------------------------------------------------------------------------------
+\begin{document}
+\thispagestyle{empty}
+
+\title{\Huge{\textbf{Using Gentrification Data to Address Systemic Differences Between the New York and San Francisco Metropolitan Statistical Areas
+\\\Large{Citadel Europe Regional Data Open Fall 2020}}\\\\\\}}
+% Add your name here
+
+\author{{\Large{\textbf{Team 10}}\\\\
+                Nikodem Czarlinski, Karan Sharma, Aaron Yuan, Jeevan Singh Bhoot\\\\
+        Trinity College, University of Cambridge}
+\date{\today}}
+\maketitle
+%-----------------------------------------------------------------------------------------
+% The start of the document
+%-----------------------------------------------------------------------------------------
+
+
+%-----------------------------------------------------------------------------------------
+% This adds the title page
+%-----------------------------------------------------------------------------------------
+
+\thispagestyle{empty}
+
+\clearpage % moves to the next page
+\pagenumbering{arabic}
+
+
+\section{Non-technical Report}
+Gentrification is defined as "the buying and renovation of houses and stores in deteriorated urban neighborhoods by upper- or middle-income families or individuals, raising property values but often displacing low-income families and small businesses." (Dictionary.com). In this study, we used USA census data of both the New York (NY) Metropolitan Statistical Area (MSA) and the San Francisco (SF) MSA to analyse whether or not the gentrification process disproportionately affected different ethnic groups more than others. This led us to our discussion of systemic differences between the regions that we were analysing, focusing on education and occupation. Finally, we circled around with an investigation into whether or not these other systemic differences were also racially motivated.
+\\
+
+We used regressions and machine learning algorithms to support our hypotheses. Eventually, we were able to illustrate a story that confirmed that gentrification was, in fact, disproportionately affecting Hispanics and Blacks while Caucasians were disproportionately unaffected by gentrification. Then, we found that these racial predictors of gentrification were much more significant in the SF MSA than the NY MSA. From here, our analysis showed that gentrification was also sector driven, with the information sector being a consistent main driver in both regions but higher in San Francisco, most likely due to the Silicon Valley in the SF MSA. Finally, we found the relationships between the information sector, education and incomes of the most affected racial groups to confirm that discrimination was occurring in both education and the workplace to disadvantage Hispanics and Blacks, therefore leading to their disproportionate experiences of being displaced in gentrification.
+
+
+\section{Technical Report}
+\subsection{Methodology}
+\subsubsection{Measuring Gentrification}
+The concept of gentrification is abstract, and a bit subjective. There is no single intrinsic property of a tract that tells the tale of the gentrification that is or is not taking place in the tract. Many have tried in the past to quantify gentrification, especially Prof. Lance Freeman. In 2005, he published a paper detailing a criterion that tracts would have to pass in order to be 'eligible for gentrification', and a second criterion to identify tracts that had gentrified over a given time period. This definition has been further improved by the Governing Magazine in their 2015 'national report on gentrification', and we will be using their criteria in our study. More on this in 2.1.3 Definitions.
+\subsubsection{Data Manipulation}
+While browsing the census data of the New York MSA provided by Citadel, we found anomalies in some of the entries - extremely negative values for home values, household incomes and 0 values for populations.
+\\
+
+Initially, we thought these values may have been overflow errors, however after opening the data in several different applications, we were unable to retrieve the 'correct data'. We came to the conclusion that these must have been fundamentally erroneous entries in the table, so to clean the data we removed all rows containing such entries. The removal of these corrupt tracts were also performed on all other data-sets.
+\\
+
+Other modifications/additions to the data are listed below:
+\begin{itemize}
+    \item Several new columns added to describe the proportions of the populations of tracts classed by ethnicity were added to the existing tracts data for regression.
+    \item Educational data from 2010 and 2018 for the number of bachelor's degree holders per tract was added from the original census data to the tracts included in our study. (Not provided by Citadel)
+    \item Occupational data classed by sector was added to each tract for the years 2010 and 2018 with all years inclusive. (Not provided by Citadel)
+    \item Two new Boolean columns were also added to the data-set. These corresponded to whether or not the tract in question passed the gentrification eligibility test and the actual gentrification test. 1 for pass and 0 for fail.
+\end{itemize}
+
+\subsubsection{Definitions}
+Following on our use of the Governing Magazine's criteria, the definition of the criterion for gentrification (criterion 2) were misleading. Their website quotes that "an increase in a tract's educational attainment, as measured by the percentage of residents age 25 and over holding bachelor’s degrees, was in the top third percentile of all tracts within a metro area" must be achieved by a tract for it to pass this point of the criterion. This language suggests that a tract must move from being relatively poorly educated to being the top 3\% of improvements. The 3\% figure is very extreme, in fact using this criteria we calculated the number of gentrified tracts was just 1 between the years of 2010 and 2018, which is too low to provide proper statistical analysis. This suggested that something was wrong...
+\\
+
+The Wikipedia page on gentrification quotes the Governing Magazine's report from 2015 with the language correction:
+
+\begin{center} 
+\textit{"the percentage of increase in home values in the tract was in the top 33rd percentile when compared to the increase in other census tracts in the urban area"}
+\end{center}
+
+As expected, this more reasonable criterion provided a much more realistic result of 36 tracts having passed both criteria for eligibility and gentrification. 
+\\
+
+The correct criteria involves two tests - the first to test a tract for whether it is eligible to gentrify in the coming years, and the second to test whether it gentrified or not. Both tests with explanations of which subsets of the data were used are listed below.
+\\
+
+The criteria for test one were:
+\begin{itemize}
+    \item The tract had a population of at least \textbf{500} residents within the time frame 2010-2018 and was located within a central city.
+    \item The tract's median household income was in the \textbf{bottom 40th percentile} when compared to all tracts within its metro area at the beginning of the decade.
+    \item The tract's median home value was in the \textbf{bottom 40th percentile} when compared to all tracts within its metro area at the beginning of the decade.\\
+\end{itemize}
+
+
+For test two:
+\begin{itemize}
+    \item An increase in a tract's educational attainment, as measured by the percentage of residents age 25 and over holding bachelor's degrees, was in the \textbf{top third} of all tracts within a metro area. \textit{We assumed that this was the top third of increases, not just changes.}
+    \item A tract's median home value \textbf{increased} when adjusted for inflation.
+    \item The percentage increase in a tract's inflation-adjusted median home value was in the \textbf{top third} of all tracts with a metro area. \textit{We again assumed that this was the top third of increases, not just changes.}\\
+\end{itemize}
+
+Tracts passing both of these tests would qualify as having gentrified in the time period being measured, i.e 2010-2018.
+
+\subsubsection{Data Awry, Spotted by Eye}
+This section is dedicated to our experiences when performing sanity checks on our results and then implementing fixes to our methodology.
+\begin{itemize}
+    \item \textbf{Obtaining only 1 gentrified tract.} As specified in the 'definitions' section, our first implementation of both sets of criteria for gentrification eligibility and actual gentrification returned only 1 tract - and unrealistic result. We then extensively checked out method before challenging the definition given to us by the Governing website. Further research into the paper that the article by Governing was based on revealed that Governing had made a stylistic typo and so we replaced the criteria from the top 3\% to the top third (33\%) of the distribution of educational attainment improvement and median home value increases. Our modified definition of this criteria led to 13 tracts having passed test 1 and test 2, a much more realistic result.
+    \item \textbf{Increases! Not changes...} Previously, for test 2, we were calculating percentile values for change which could be positive or negative. This resulted in the percentile values being negative, which we noticed as an unexpected result, prompting us to look back into where we made the mistake. The criteria that we have now defined for both the education and median home value is based on the sample of tracts that showed increases (strictly positive change) in these metrics. 
+\end{itemize}
+
+\subsubsection{Assumptions}
+In our study, we made the following assumptions:
+\begin{itemize}
+    \item We assumed that all census' data we used were representative of the populations they were drawn from.
+    \item We assumed that the criteria described in the Governing Magazine's report accurately quantifies eligibility for gentrification and gentrification in the years 2010-2018.
+\end{itemize}
+\subsubsection{Modelling}
+
+Overall, we trained three different predictive models. The first was to predict the gentrification eligibility (test one) of tracts in both the NY-MSA and SF-MSA, the second was to predict the actual gentrification rate (test 2) of these areas, and the third was to predict these tracts' improvements using metrics in incomes, house prices and educational improvements. These were all optimised in their hyper-parameters which will be included in tables under them.
+During the training process, we performed a randomised search with 3 fold cross validation and 500 iterations to find the best set of hyper-parameters, using a scoring system of the f1 value. The models were also all trained and tested using independent subsets of data from the total census in order to avoid over-fitting.
+\\
+
+We trained a random forest classifier model using subsets of New York MSA data in 2010 and 2018 to predict gentrification eligibility (test 1). A random forest is an ensemble of decision trees where each classifier makes a prediction and the overall prediction is based on the most common vote. This is also a process known as hard voting. This is shown by the following confusion matrix, where the 0 indicates negative and 1 indicates positive. The rows show the predictive model results and the columns show the actual results. The perfect result of 100\% accuracy would be for the main diagonal to be completely white and the other cells to be black (0 absolute values). The hyper-parameters are also listed in a table underneath.
+\\
+\begin{center}
+    \includegraphics[scale=0.6]{confusion_matrix_ny_1_COMPACT.png}
+\end{center}
+\begin{center}
+    \begin{tabular}{ | m{12em} |} 
+        \hline
+        Hyper-parameters \\
+        \hline
+        n\_estimators = 1823\\
+        min\_samples\_split = 4\\
+        min\_sample\_leaf = 1\\
+        max\_features = auto\\
+        max\_depth = 76\\
+        class\_weight = None\\
+        bootstrap = False\\
+        \hline
+    \end{tabular}
+\end{center}
+
+This model for predicting gentrification eligibility had an accuracy rate of 99.65\%. Using the same model, we also predicted the gentrification eligibility rates using test 1 of the San Francisco with an 84.64$\%$ accuracy rate described by the confusion matrix below. 
+
+\begin{center}
+    \includegraphics[scale=0.6]{confusion_matrix_sf_COMPACT.png}
+\end{center}
+
+Note that the false negatives were perfectly black at 0 score but the number of false positives were relatively high, signalling systemic racial differences between the regions of the San Francisco MSA and the New York MSA based on income and housing quality metrics used in test 1.\\
+
+The second model predicts the rate of actual gentrification. For this, we trained a model using 2010-2018 data, all years inclusive, to perform both test 1 and test 2. Then, when testing it on NY MSA data, making sure to use independent clusters of subsets of data from the census, the following confusion matrix was obtained.
+\begin{center}
+    \includegraphics[scale=0.7]{confusion_matrix_ny_2_niko_COMPACT.png}
+    \begin{tabular}{ | m{17em} |} 
+        \hline
+        Hyper-parameters \\
+        \hline
+        n\_estimators = 10\\
+        min\_samples\_split = 2\\
+        min\_sample\_leaf = 3\\
+        max\_features = auto\\
+        max\_depth = 20\\
+        class\_weight = balanced\_subsample \\
+        bootstrap = True\\
+        \hline
+    \end{tabular} 
+\end{center}
+\begin{center}
+      
+\end{center}
+
+What is interesting about this model is that even after this model is then trained only on the variables of races, it is still able to predict the gentrification rate using test 1 and test 2 in the NY MSA. The scores of the features also revealed Hispanics (0.1306), Blacks (0.1066) and Caucasians (0.099) to be the top 3 predictive features. The following confusion matrix shows the high accuracy of the predictions, despite only using racial features.
+\begin{center}
+    \includegraphics[scale=0.7]{confusion_matrix_ny_2_niko_race_COMPACT.png}
+\end{center}
+
+The third model was based on tract improvement as opposed to gentrification. Any tract that would have qualified for gentrification using test 2 criteria but did not pass test 1 criteria for gentrification eligibility were included as having passed overall. The model had the following confusion matrix below when testing against independent subsets of NY MSA data. The optimised hyperparameters are also shown.
+
+\begin{center}
+\includegraphics[scale=0.65]{confusion_matrix_ny_3_jeevs_COMPACT.png}
+\end{center}
+\begin{center}
+    \begin{tabular}{ | m{12em} |} 
+        \hline
+        Hyper-parameters \\
+        \hline
+        n\_estimators = 10\\
+        min\_samples\_split = 2\\
+        min\_sample\_leaf = 3\\
+        max\_features = sqrt\\
+        max\_depth = 10\\
+        class\_weight = balanced\\
+        bootstrap = False\\
+        \hline
+    \end{tabular}
+\end{center}
+
+Given that the construction of this model was based on looser constraints on the criteria for test 2, then this was expected. However, it is still favourable to observe such high predictive capabilities for an improvement model. Again, the model was trained using clustered subsets of the data that were independent of the data that was used to test the model, therefore reducing the chance of the model over-fitting. We then used this model on San Francisco MSA data to produce the following confusion matrix, yielding a 97.164\% accuracy rate.
+
+\begin{center}
+\includegraphics[scale=0.65]{confusion_matrix_sf_3_jeevs_COMPACT.png}
+\end{center}
+
+\subsection{Analysis}
+As a preliminary investigation, we carried out regressions between gentrification eligibility and various features from the unedited census data-set. The results are below. 
+\\
+\begin{center}
+\begin{tabular}{ | m{12em} |  m{4cm} | m{3.5cm} |  } 
+\hline
+Variable & r-value (2010 data) & r-value (2018 data) \\ 
+\hline
+no\_hisp\_latin & 0.325739 & 0.330896\\ 
+\hline
+no\_nonh\_blacks/aas & 0.262827 & 0.242014\\
+\hline
+no\_amerinds\_alskns & 0.056961 & 0.074572 \\
+\hline
+no\_nonh\_others & 0.041292 & 0.041577\\
+\hline 
+population & 0.024160 & 0.021747\\
+\hline
+no\_nonh\_hawaii\_pacific & -0.000848 & 0.013647\\
+\hline
+no\_nonh\_multi & -0.028295 & -0.045377\\
+\hline
+no\_nonh\_asians & -0.090139 & -0.104720\\
+\hline
+no\_nonh\_caucasians & -0.296306 & -0.287119\\
+\hline
+household\_income & -0.440283 & -0.441597 \\ 
+\hline
+home\_value & -0.488391 & -0.439094\\
+\hline
+\end{tabular}
+\\
+\end{center}
+
+In terms of relative values, we can clearly see a positive correlation between the eligibility of gentrification with specific race groups such as Hispanic-Latins and African-Americans (non-Hispanic blacks). These were contrasted with the relatively largely negative regression values for the number of non-Hispanic Caucasians. Note that the values for Asian households were weakly negative.
+\\
+
+By then adding features to describe the proportionate sizes of these groups within their tracts, as well as variables corresponding to the proportion of non-whites, we obtained the following regression table values.
+\\
+\begin{center}
+\begin{tabular}{ | m{14em} | m{3cm}| m{3.5cm} | }
+\hline
+Variable & r-value (2010) & r-value (2018) \\ 
+\hline
+gentrify\_elig & 1.000000 & 1.000000 \\ 
+\hline
+proportion\_non\_white & 0.364748 & 0.350848 \\ 
+\hline
+proportion\_hisp\_latin & 0.349615 & 0.364114 \\
+\hline
+proportion\_nonh\_black & 0.262827 & 0.231117 \\
+\hline
+proportion\_amerinds\_alskns & 0.056961 & 0.059358 \\
+\hline 
+proportion\_nonh\_others & 0.024284 & 0.018607 \\
+\hline
+proportion\_nonh\_hawaii\_pacific & -0.007678 & 0.007229 \\
+\hline
+proportion\_nonh\_multi & -0.040574 & -0.060249 \\
+\hline
+proportion\_nonh\_asians & -0.126842 & -0.142732 \\
+\hline
+proportion\_nonh\_caucasians & -0.364748 & -0.350848 \\
+\hline
+
+\end{tabular}
+\end{center}
+
+Observing the racial variables, we can see polarising extremes between the r-values for the proportion of non-whites and the proportion of non-Hispanic Caucasians. As the criteria for eligibility of gentrification are proxy to indicators for inequality in incomes and housing quality, this data is an insight into porential racial bias in inequality in the New York MSA.
+\\
+
+We then used 2010 San Francisco MSA data to find if these trends in New York were more universal across the nation. This would also help us find if our model for New York was over-fitted, which would present itself as any large discrepancies in the prediction accuracy and precision rates. Our findings from the regression values are listed below. 
+\\
+\begin{center}
+\begin{tabular}{ | m{13.5em} |  m{4cm} | m{4cm} | } 
+\hline
+Variable & Regression Value \\ 
+\hline
+gentrify\_elig & 1.000000 \\ 
+\hline
+proportion\_nonh\_black & 0.510570 \\ 
+\hline
+proportion\_hisp\_latin & 0.494656\\
+\hline
+proportion\_non\_white & 0.462821 \\
+\hline 
+proportion\_amerinds\_alskns & 0.204831 \\
+\hline
+proportion\_nonh\_hawaii\_pacific & 0.137445 \\
+\hline
+proportion\_nonh\_others & 0.002359 \\
+\hline
+proportion\_nonh\_multi  & -0.086612 \\
+\hline
+proportion\_nonh\_asians &  -0.158762 \\ 
+\hline
+proportion\_nonh\_caucasians & -0.462821\\
+\hline
+
+\end{tabular}
+\end{center}
+
+We observe that the proportion of non-Hispanic blacks and the proportion of Hispanic-Latinos living in a tract is highly correlated with whether the tract is eligible for gentrification. Additionally, these values are consistently much higher than for New York. Although hard to explain, this suggests a larger racial inequity in living standards in the San Francisco MSA than the New York MSA.
+\\
+
+To further try to explain this, we then utilised census data of the occupations and education held by households of New York and San Francisco in 2010 to study any underlying systemic differences that could relate to race. The regression values are summarised in the table below for New York. \\
+
+\begin{center}
+\begin{tabular}{ | m{13.5em} |  m{4cm} | } 
+\hline
+Variable & Regression Value \\ 
+\hline
+gentrify\_elig & 1.000000 \\ 
+\hline
+2010\_percent\_$>$25bachelors & -0.338479 \\
+\hline
+2010\_$>$25bachelors & -0.240077 \\
+\hline
+2010\_bachelors & -0.236275 \\
+\hline
+2010\_finance & -0.188538 \\
+\hline
+2010\_information & -0.172911 \\
+\hline
+2010\_male$<$25\_bachelors & -0.142074 \\
+\hline
+2010\_female$<$25\_bachelors & -0.102783 \\
+\hline
+2010\_public\_admin & -0.069780 \\
+\hline
+2010\_edu\_health\_social & -0.058178 \\
+\hline
+2010\_retail & -0.000540 \\
+\hline 
+2010\_construction & 0.010709\\
+\hline
+2010\_armed\_forces & 0.027868\\
+\hline
+2010\_arts\_recreation\_accom & 0.043675 \\ 
+\hline
+
+\end{tabular}
+\end{center}
+
+Since bachelor's degree holders generally have a higher income, the trend of negative correlations between the eligibility of gentrification and the metrics with education are to be expected, because the construction of our criteria for test 1 was largely negatively correlated with the household incomes. The values for the information and finance sectors are especially interesting as they show much larger correlation than the other sectors, and they are negatively correlated with gentrification eligibility. This indicates that gentrification may be sector driven, so we shall further analyse this.
+\\
+
+If we assume that gentrification is a sector driven trend, then we would expect that out of tracts that are eligible for gentrification, those with higher proportions of workers from certain sectors will show higher gentrification than tracts with workers from other sector. Therefore, since these sectors must be systemically different between the tracts that were gentrified and those that were eligible to but didn't, we performed these regressions only on the subset of tracts that were eligible for gentrification (passed test 1), rather than the full data-set.
+\begin{center}
+\begin{tabular}{ | m{10em} |  m{5.5cm} | m{5.5cm} |} 
+\hline
+Variable & r-value (proportional changes) & r-value (absolute changes)\\  
+\hline
+gentrified\_tracts & 1.000000 & 1.000000\\
+\hline
+construction & 0.012691 & -0.014615\\
+\hline
+retail & -0.008059 & 0.012053\\
+\hline
+information & 0.089459 & 0.105149\\
+\hline
+finance & -0.012682 & -0.063596\\
+\hline
+edu\_health\_social & 0.000709 & -0.020710\\
+\hline
+arts\_rec\_accom & 0.030780 & 0.149183\\
+\hline
+public\_admin & 0.104892 & 0.033502\\
+\hline
+armed\_forces & -0.048295 & -0.016894\\
+\hline
+\end{tabular}
+\end{center}
+
+From here, we can highlight meaningful sectors correlating with gentrification. The information sector is no surprise, being an example of a fast expanding sector globally. Contrasting to this, in both proportional and absolute changes, the arts, recreation and accommodation sector has also seen a relatively high positive correlation with gentrification. A possible explanation for this could be that as the incomes in an area increase, households have more money to spend on amenities such as entertainment. This is a very "panem et circenses" argument that is consistent with the increased need for urban areas to create their own superficial entertainment to appease citizens. The same regressions have also been drawn for SF MSA data.
+\\
+\begin{center}
+\begin{tabular}{ | m{10em} |  m{5.5cm} | m{5.5cm} |} 
+\hline
+Variable & r-value (proportional changes) & r-value (absolute changes)\\ 
+\hline
+gentrified\_tracts & 1.000000 & 1.000000\\
+\hline
+construction	& -0.038183 & -0.037818\\
+\hline
+retail & 0.210917 & -0.000947\\
+\hline
+information & 0.152319 & 0.158292\\
+\hline
+finance & -0.011547 & -0.030257\\
+\hline
+edu\_health\_social & 0.086034 & -0.010652\\
+\hline
+arts\_rec\_accom & -0.077529 & -0.091050\\
+\hline
+public\_admin & 0.006998	& -0.003424\\
+\hline
+armed\_forces & N/A & 0.007149\\
+\hline
+\end{tabular}
+\end{center}
+
+Note that we could not get a regression value for proportional changes of the armed forces sector because the SF MSA data-set contained too many null values for this sector's tract-wise population field.
+\\
+
+These results from SF are significantly different to the results from NY. For instance, the information sector has much higher r-values in these results than in the NY results. This can be explained from the prominence of the technological industry in the Silicon Valley, located in the SF MSA. The SF MSA also, contrasting to the NY MSA, showed arts to be negatively correlated to gentrification, and retail to be positively correlated to gentrification in proportional changes but not in absolute changes. 
+\\
+
+Overall, from this analysis, the data indicates that these tracts have been gentrified due to sector driven reasons, especially in increases in the nationally expanding higher paid information sector. It points to a story that illustrates the information sector attracting skilled workers towards the city tracts, that can then use their higher incomes to "improve"/gentrify these tracts. Secondary sectors, such as retail sectors that suggest a theory of capital movement to support the higher demands of higher income earners, show correlation but are not main causal effects.
+\\
+
+We also used test 2 as a standalone for general tract improvement. The following table focuses on the change in education and occupations for all tracts in the NY MSA and SF MSA when tested for correlation with test 2.
+
+\begin{center}
+\begin{tabular}{ | m{14em} |  m{4cm} | m{4cm} | } 
+\hline
+    Variable & r-value (SF MSA) & r-value (NY MSA)\\
+    \hline
+\%\_change\_home\_value & 0.358650516 & 0.116407501\\
+\hline
+\%\_change\_construction & -0.011211515 & 0.008787916\\
+\hline
+\%\_change\_retail & 0.103701449 & 0.041321793\\
+\hline
+\%\_change\_information & 0.082053966 & 0.082730433\\
+\hline
+\%\_change\_finance & -0.03414579 & 0.016161293\\
+\hline
+\%\_change\_eduhealthsocial & 0.010861589 & 0.028659362\\
+\hline
+\%\_change\_artsrecaccom	& -0.030153449 & 0.021675701\\
+\hline
+\%\_change\_publicadmin	& -0.007263129 & 0.031810188\\
+\hline
+\%\_change\_armedforces	& 0.052143007 & -0.037524712\\
+\hline
+\%\_change\_$>$25bachelors & 0.361656841 & 0.234283302\\
+    \hline
+\end{tabular}
+\end{center}
+
+Finally, to further analyse occupational and educational data, and link it back to racial discrimination, we plotted additional regression charts between the following features from 2010. The three most disproportionately affected ethnic groups, household income, the information sector and educational attainment were tested for correlation with each other.
+
+\begin{center}
+\begin{tabular}{ | m{16em} |  m{5.0cm} | m{3cm} | } 
+\hline
+Variable 1 & Variable 2 & Regression Value \\ 
+\hline
+2010\_proportion\_hisp\_latin & 2010\_proportion\_bachelors & -0.464235\\ 
+\hline
+2010\_proportion\_hisp\_latin & 2010\_household\_income & -0.488672  \\
+\hline
+2010\_proportion\_hisp\_latin & 2010\_proportion\_information & -0.200250\\
+\hline
+2010\_proportion\_nonh\_black & 2010\_proportion\_bachelors & -0.314286 \\
+\hline
+2010\_proportion\_nonh\_black & 2010\_household\_income & -0.341306 \\
+\hline
+2010\_proportion\_nonh\_black & 2010\_proportion\_information & -0.137613\\
+\hline
+2010\_proportion\_nonh\_caucasians & 2010\_proportion\_bachelors & 0.478912\\
+\hline
+2010\_proportion\_nonh\_caucasians & 2010\_household\_income & 0.587047\\
+\hline
+2010\_proportion\_nonh\_caucasians & 2010\_proportion\_information & 0.219529\\
+\hline
+2010\_proportion\_bachelors & 2010\_household\_income & 0.586833\\
+\hline
+2010\_proportion\_bachelors & 2010\_proportion\_information & 0.568989\\
+\hline
+2010\_proportion\_information & 2010\_household\_income & 0.273017\\
+\hline 
+\end{tabular}
+\end{center}
+
+As we can see from these tabulated results, Hispanics and Blacks are disproportionately discriminated in both education and the workplace in higher paid information sector jobs.
+
+\subsection{Discussion}
+In our study, we centred our focus on 3 main questions. The first was whether or not gentrification was correlated with racial demographics. This was confirmed true by our second model, when we compared our confusion matrices between the model being trained on all features and the model being only trained on racial data. Since the model was still able to predict with a high degree of accuracy and precision, then race must be a good predictor. Further analysis of the race features' scores showed that Hispanics, Blacks and Caucasians were, respectively, the top 3 predicting features.
+\\
+
+The second was whether or not these racial trends applied outside the NY MSA. We used both model 1 and model 3 to highlight differences between the NY and SF MSA. In model 1 the predictor for inequality using test 1, trained on the NY MSA data, returned considerably higher amounts of false positives when predicting for the SF MSA. Model 3, predicting the outcomes of test 1 and 2 together, instead showed similar results in its confusion matrices between NY and SF MSA data. Therefore, the data suggested that the initial endowments, such as house prices and incomes in 2010, between NY and SF were different. Furthermore, comparing correlations of SF to NY MSA data also suggested that race played a greater part in SF than NY, therefore suggesting these initial endowment differences could be predicted by ethnic group.
+\\
+
+We focused on the question of whether or not the systemic differences between regions could be explained by a story of sector driven gentrification. For this, we found regression values of NY MSA data for gentrification eligibility. These showed that sectors such as finance and information had large negative correlations with being eligible for gentrification, suggesting these sectors were associated with high household incomes and house prices, while arts, recreation, accommodation and armed forces sectors were not. Then, we found regression values between sectors and gentrified tracts (that passed both criteria in our definition of gentrification). The hope was to find sectors that were consistently driving gentrification in NY and in SF, which we found to be primarily the information sector. Our findings were consistent with the higher correlation between information and gentrification in SF than NY due to the contributions of the Silicon Valley to SF MSA's information sector.
+\\
+
+Finally, we used our findings to paint a composite picture, using both employment sectors and race. Our findings were that at both levels of education and employment, Hispanics and Blacks did far worse than Caucasians by an incredible margin.
+
+\subsection{Conclusion}
+Overall, the following conclusion can be made. Gentrification seems to be sector driven, with the fast expanding high paid information sector being a main driver of the movement of capital and education towards tracts in city areas. This movement of wealth has side effects of increases in the entertainment sector for NY and retail sector for SF. Gentrification is then also racially biased, by happening disproportionately more to Hispanic and Black ethnic groups and less to Caucasians, due to inequalities in both education and employment sectors.
+
+\subsection{What next}
+
+We briefly looked into how 311 calls were correlated with gentrification. One would expect that tracts with high numbers of such complaints would be ripe for the effects of gentrification to take place over the coming years. In the census data for 311 calls provided by Citadel, each call was only associated with a zip code. Every zip code contains multiple tracts. Therefore, using HUD USPS ZIP CODE CROSSWALK FILES to relate zip codes to tracts, the following correlation values were found:
+
+\begin{center}
+\begin{tabular}{ | m{10em} |  m{14em} | m{14em} | } 
+\hline
+    Variable & Correlation with Proportion Of Gentrification Eligible Tracts & Correlation with Proportion Of Gentrified Tracts\\
+\hline
+    \# 311 calls in 2010 & 0.247836 & 0.258343\\
+\hline
+\end{tabular}
+\end{center}
+These shows that tracts that were eligible to gentrify in 2010 and those that gentrified in the years 2010-2018 both were correlated with the number of 311 calls that came from these tracts in 2010, before they were gentrified. This hints at the idea that 311 calls can be used to predict tracts that will undergo gentrification over the coming years. To link this with predicting using racial and worker sector demographics, the next step would be to test correlation between 311 calls, proportion of different ethnicities, proportion of different worker sectors, gentrification eligible tracts and gentrified tracts.
+
+\subsection{References}
+\textbf{Census data}: https://www.census.gov\newline
+\textbf{Governing Magazine article}: https://www.governing.com/gov-data/gentrification-report-methodology.html\newline
+\textbf{Original gentrification definition}: Lance Freeman, 2005, Displacement or Succession?: Residential Mobility in Gentrifying Neighborhoods\newline
+\textbf{Wikipedia article describing the Governing Magazine's report}: https://en.wikipedia.org/wiki/Gentrification\newline
+\textbf{hud usps zip code crosswalk files}: https://www.huduser.gov/portal/datasets/usps\_crosswalk.html?fbclid=IwAR22Nof0RMiU0x7LTna8ECrixtp-Xu9CKpMyEbVGjaYiOUwM-nkqLbxKpCc#data
+
+
+\end{document}
